@@ -1,0 +1,183 @@
+@import 'compass/css3';
+
+$l: 8em;
+$c: #abbb3e, #e09a43, #86272f;
+
+$n3gon: 3;
+$ba3gon: 360deg/$n3gon;
+$ha3gon: .5*$ba3gon;
+$ri3gon: .5*$l/tan($ha3gon);
+$rc3gon: .5*$l/sin($ha3gon);
+$dc3gon: 2*$rc3gon;
+$h3gon: $ri3gon + $rc3gon;
+$da4hedron: acos($ri3gon/$h3gon)*180deg/pi();
+$ri4hedron: $rc3gon/tan($da4hedron);
+
+@function reg-poly($n, $rc, $oa: -90deg) {
+	$n: round($n);
+	$ba: 360deg/$n;
+	$vertices: ();
+	
+	@for $i from 0 to $n {
+		$ca: $i*$ba + $oa;
+		
+		$x: calc(50% + #{$rc*cos($ca)});
+		$y: calc(50% + #{$rc*sin($ca)});
+		
+		$vertices: $vertices, $x $y;
+	}
+	
+	@return polygon($vertices);
+}
+
+* { margin: 0 }
+
+body {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100vh;
+	background: whitesmoke;
+	color: #380a38;
+	font: 4vmin yellowtail, cursive;
+	text-align: center;
+}
+
+h2 {
+	transform: skewx(9deg);
+	background: repeating-linear-gradient(45deg, nth($c, 3) 0, $c 20%);
+	-webkit-background-clip: text;
+					background-clip: text;
+	color: transparent;
+	filter: drop-shadow(2px 2px 2px #000);
+	font-size: 2.5em;
+	line-height: 2;
+}
+
+input {
+	position: absolute;
+	left: -100vw;
+	
+	&:checked {
+		+ label {
+			background: nth($c, 1);
+			text-indent: 0em;
+			
+			span {
+				opacity: 1;
+				transform: scale(1)
+			}
+		}
+		
+		~ .scene .s3d--4hedron {
+			--rot-ang: 1turn;
+			--x: 0;
+			--z: -$ri4hedron;
+			--fold-ang: $da4hedron - 90deg;
+			
+			.s2d--3gon {
+				--fold-ang: $da4hedron - 180deg
+			}
+		}
+	}
+}
+
+label {
+	align-self: center;
+	order: 1;
+	padding: 0 0 .125em;
+	width: 6.5em;
+	border-radius: 3em;
+	background: nth($c, 2);
+	font-size: 1.125em;
+	text-indent: -.375em;
+	transition: ease-in-out .5s;
+	cursor: pointer;
+}
+
+span {
+	display: inline-block;
+	opacity: 0;
+	transform: scale(0);
+	transition: inherit;
+}
+
+section {
+	flex: 1;
+	order: 2;
+	position: relative;
+	margin: .5em;
+	perspective: 37em;
+	perspective-origin: 50% calc(50% - #{$l});
+	box-shadow: 1px 1px 3px grey;
+	background: white;
+}
+
+div {
+	position: absolute;
+	transform-style: preserve-3d;
+	transition: transform ease-in-out 3s;
+	
+	&:before, &:after {
+		position: absolute;
+		opacity: .5;
+		margin: -$rc3gon;
+		width: $dc3gon; height: $dc3gon;
+		backface-visibility: hidden;
+		background: currentcolor;
+		clip-path: reg-poly(3, 47.5%);
+		content: ''
+	}
+	
+	&:after {
+		transform: rotatey(.5turn);
+		background: nth($c, 1);
+		background-image: conic-gradient(var(--cl, 
+				var(--c0, nth($c, 3)) var(--s0, 150deg), 
+				var(--c1, nth($c, 2)) var(--s1, 210deg)));
+		background-position: 50% #{-$l};
+		background-size: #{2*$l} #{2*$l};
+	}
+}
+
+.s3d--4hedron {
+	top: 50%; left: 50%;
+	--hov-ang: 0turn;
+	transform: rotatey(var(--rot-ang, 0deg))
+		translate3d(var(--x, -.75*$l), 0, var(--z, 0)) 
+		rotatex(calc(var(--fold-ang, 0turn) + var(--hov-ang)));
+	
+	&:hover {
+		--hov-ang: .5turn;
+	}
+}
+
+.s2d--3gon {	
+	transform-origin: 50% calc(50% + #{$ri3gon});
+	--rot-ang: $ha3gon;
+	--base: translatey(-$ri3gon) 
+			rotate(var(--rot-ang)) translatey(-$ri3gon);
+	transform: var(--base) rotatex(var(--fold-ang, 0deg));
+	
+	&:not(.fin):after {
+		--c0: nth($c, 2);
+		--s0: 270deg;
+		--c1: nth($c, 1);
+		--s1: 330deg;
+		background-position: $rc3gon - .5*$l $h3gon - $l;
+	}
+	
+	& &:not(.fin):after {
+		--cl: nth($c, 3), $c;
+		background-position: 50%;
+	}
+	
+	&.fin {
+		--rot-ang: -$ha3gon;
+		
+		&:after {
+			--c0: nth($c, 1);
+			--c1: nth($c, 3);
+		}
+	}
+}
