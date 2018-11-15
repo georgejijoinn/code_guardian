@@ -1,0 +1,13 @@
+mixin nest(base, n)
+	div(class=`${base} ${--n?'':'fin'}`)
+		if n
+			+nest(base, n)
+
+input#fold(type='checkbox')
+label(for='fold')
+	span un
+	| fold me!
+h2 Folding a tetrahedron
+section.scene
+	.s3d--4hedron
+		+nest('s2d--3gon', 3)
